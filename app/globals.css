@@ -354,6 +354,15 @@ body::after {
   line-height: 1;
 }
 
+.lm-kickoff {
+  max-width: 150px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1.15;
+  text-align: center;
+}
+
 .lm-min {
   font-size: 11px;
   font-weight: 600;

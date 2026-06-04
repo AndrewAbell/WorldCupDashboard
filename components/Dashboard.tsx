@@ -115,7 +115,17 @@ export default function Dashboard() {
     void loadAll();
   }, [loadAll]);
 
-  const liveMatch = scores.data[0] ?? null;
+  const nextUpcomingMatch = useMemo(
+    () =>
+      matches.data
+        .filter((match) => match.status === "SCHEDULED")
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0] ?? null,
+    [matches.data]
+  );
+  const featuredMatch = scores.data[0] ?? nextUpcomingMatch;
+  const featuredMatchMode = scores.data[0] ? "live" : "upcoming";
+  const featuredMatchLoading = scores.loading || (!scores.data.length && matches.loading);
+  const featuredMatchError = featuredMatch ? null : scores.error ?? matches.error;
   const predictorMatch = useMemo(() => matches.data.find((match) => match.id === "usa-mex-nashville") ?? matches.data[0] ?? null, [matches.data]);
   const bracketTeams = useMemo(
     () =>
@@ -129,7 +139,13 @@ export default function Dashboard() {
     <main className="wrap">
       <Header liveCount={scores.data.length} />
       <MyTeams matches={matches.data} />
-      <LiveMatch match={liveMatch} loading={scores.loading} error={scores.error} onRetry={loadAll} />
+      <LiveMatch
+        match={featuredMatch}
+        mode={featuredMatchMode}
+        loading={featuredMatchLoading}
+        error={featuredMatchError}
+        onRetry={loadAll}
+      />
       <div className="grid3">
         <GroupStandings standings={standings.data} loading={standings.loading} error={standings.error} onRetry={loadAll} />
         <MatchSchedule matches={matches.data} loading={matches.loading} error={matches.error} onRetry={loadAll} />
