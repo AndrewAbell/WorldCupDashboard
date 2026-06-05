@@ -23,17 +23,37 @@ function getIp(request: NextRequest): string {
 }
 
 function buildMessages(input: PredictRequest) {
+  const formLines = [
+    input.homeForm.length ? `Home form: [${input.homeForm.join("/")}]` : "",
+    input.awayForm.length ? `Away form: [${input.awayForm.join("/")}]` : ""
+  ].filter(Boolean);
+  const contextLines = [
+    `Predict: ${input.homeTeam} vs ${input.awayTeam}.`,
+    ...formLines,
+    `Group: [${input.group}].`,
+    `Stage: [${input.stage}].`
+  ];
+
   return [
     {
       role: "system",
       content:
-        'You are a football analyst. Respond only with JSON: {"homeWin":number,"draw":number,"awayWin":number,"reasoning":"short sentence"}. The three numbers must sum to 100.'
+        [
+          'You are a football analyst. Respond only with JSON: {"homeWin":number,"draw":number,"awayWin":number,"reasoning":"short sentence"}.',
+          "Rules:",
+          "- homeWin + draw + awayWin should sum to about 100 using integers.",
+          "- Base estimates ONLY on the data given in the user message plus widely-established general knowledge of each national team's overall strength.",
+          "- Do NOT invent or reference recent form, results, scorelines, momentum, injuries, lineups, or any statistic that is not explicitly provided.",
+          "- If form is not given, do not mention form at all.",
+          "- Home/away labels in this tournament are mostly nominal.",
+          "- Apply a home-advantage adjustment ONLY when the user message states the home team is a host nation playing at home.",
+          "- Reflect genuine differences in team strength. Do NOT default to near-even splits; only output close probabilities when the teams are truly comparable.",
+          "- The reasoning must be one short sentence grounded only in the inputs and general team-strength knowledge. No fabricated specifics."
+        ].join("\n")
     },
     {
       role: "user",
-      content: `Predict: ${input.homeTeam} vs ${input.awayTeam}.
-Home form: [${input.homeForm.join("/")}]. Away form: [${input.awayForm.join("/")}].
-Group: [${input.group}]. Stage: [${input.stage}].`
+      content: contextLines.join("\n")
     }
   ];
 }

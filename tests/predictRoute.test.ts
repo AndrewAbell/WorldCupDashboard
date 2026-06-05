@@ -96,3 +96,51 @@ test("returns 400 for invalid prediction JSON", async () => {
   assert.equal(body.prediction, null);
   assert.equal(body.error, "Invalid JSON request body");
 });
+
+test("sends constrained predictor rules and omits absent form", async () => {
+  process.env.HF_API_KEY = "hf";
+  let requestBody = "";
+  globalThis.fetch = async (_url, init) => {
+    requestBody = String(init?.body);
+    return new Response(JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: "{\"homeWin\":72,\"draw\":18,\"awayWin\":10,\"reasoning\":\"Brazil's general team strength is clearly higher than Haiti's.\"}"
+          }
+        }
+      ]
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
+  };
+
+  const response = await POST(
+    new NextRequest("http://localhost/api/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "198.51.100.4"
+      },
+      body: JSON.stringify({
+        matchId: "match-2",
+        homeTeam: "Brazil",
+        awayTeam: "Haiti",
+        homeForm: [],
+        awayForm: [],
+        group: "Group C",
+        stage: "Group Stage"
+      })
+    })
+  );
+  const payload = JSON.parse(requestBody) as { messages: Array<{ role: string; content: string }> };
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.prediction.homeWin + body.prediction.draw + body.prediction.awayWin, 100);
+  assert.match(payload.messages[0].content, /Do NOT invent or reference recent form/);
+  assert.match(payload.messages[0].content, /Home\/away labels in this tournament are mostly nominal/);
+  assert.match(payload.messages[0].content, /Do NOT default to near-even splits/);
+  assert.doesNotMatch(payload.messages[1].content, /form/i);
+});
