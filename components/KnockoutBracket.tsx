@@ -58,6 +58,7 @@ export default function KnockoutBracket({
   const [animatedPick, setAnimatedPick] = useState("");
   const [savedBrackets, setSavedBrackets] = useState<SavedBracket[]>([]);
   const [saveMessage, setSaveMessage] = useState("");
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
 
   useEffect(() => {
     setSavedBrackets(getUserBrackets());
@@ -66,6 +67,9 @@ export default function KnockoutBracket({
   const totalGroupPicks = standings.length * 3;
   const groupPickCount = countGroupPositionPicks(standings, groupPicks);
   const groupsComplete = standings.length > 0 && groupPickCount === totalGroupPicks;
+  const currentGroup = standings[currentGroupIndex] ?? standings[0];
+  const currentGroupPicks = currentGroup ? groupPicks[currentGroup.group] ?? {} : {};
+  const currentGroupComplete = Boolean(currentGroupPicks.first && currentGroupPicks.second && currentGroupPicks.third);
   const bracketRounds = useMemo(
     () => buildOfficialBracketRounds(standings, groupPicks, thirdQualifiers, knockoutPicks),
     [groupPicks, knockoutPicks, standings, thirdQualifiers]
@@ -163,6 +167,22 @@ export default function KnockoutBracket({
     setKnockoutPicks({});
     setAnimatedPick("");
     setSaveMessage("");
+    setCurrentGroupIndex(0);
+  }
+
+  function goToNextGroup() {
+    if (currentGroupIndex < standings.length - 1) {
+      setCurrentGroupIndex((index) => index + 1);
+      setAnimatedPick(`group-card-${currentGroupIndex + 1}`);
+      return;
+    }
+    if (groupsComplete) {
+      setStep("thirds");
+    }
+  }
+
+  function goToPreviousGroup() {
+    setCurrentGroupIndex((index) => Math.max(0, index - 1));
   }
 
   function teamButton(team: Team | undefined, label: string, selected: boolean, animated: boolean, onClick: () => void) {
@@ -247,31 +267,49 @@ export default function KnockoutBracket({
                 </div>
                 {step === "groups" ? (
                   <>
-                    <div className="bracket-progress"><span>Group picks: {groupPickCount}/{totalGroupPicks}</span></div>
-                    <div className="group-pick-grid official">
-                      {standings.map((group) => (
-                        <div className="group-pick" key={group.group}>
-                          <div className="group-pick-title">{group.group}</div>
+                    <div className="bracket-progress">
+                      <span>Group {currentGroupIndex + 1} of {standings.length}</span>
+                      <span>{groupPickCount}/{totalGroupPicks} picks</span>
+                    </div>
+                    {currentGroup ? (
+                      <div className={`group-step-card ${animatedPick === `group-card-${currentGroupIndex}` ? "slide-in" : ""}`}>
+                        <div className="group-step-head">
+                          <div>
+                            <div className="group-step-eyebrow">Group stage</div>
+                            <div className="group-step-title">{currentGroup.group}</div>
+                          </div>
+                          <div className="group-step-meter">
+                            {POSITIONS.map(({ key }) => (
+                              <span className={currentGroupPicks[key] ? "filled" : ""} key={key} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="group-step-slots">
                           {POSITIONS.map(({ key, label }) => (
-                            <div className="position-row" key={key}>
+                            <div className="position-row guided" key={key}>
                               <span>{label}</span>
                               <div className="position-options">
-                                {group.teams.map((row) =>
+                                {currentGroup.teams.map((row) =>
                                   teamButton(
                                     row.team,
                                     row.team.shortName,
-                                    groupPicks[group.group]?.[key] === row.team.id,
-                                    animatedPick === `${group.group}-${key}-${row.team.id}`,
-                                    () => selectGroupTeam(group.group, key, row.team)
+                                    currentGroupPicks[key] === row.team.id,
+                                    animatedPick === `${currentGroup.group}-${key}-${row.team.id}`,
+                                    () => selectGroupTeam(currentGroup.group, key, row.team)
                                   )
                                 )}
                               </div>
                             </div>
                           ))}
                         </div>
-                      ))}
-                    </div>
-                    <button className="bracket-next" disabled={!groupsComplete} onClick={() => setStep("thirds")} type="button">Choose best third-place teams</button>
+                        <div className="group-step-nav">
+                          <button className="bracket-next secondary" disabled={currentGroupIndex === 0} onClick={goToPreviousGroup} type="button">Previous group</button>
+                          <button className="bracket-next" disabled={currentGroupIndex === standings.length - 1 ? !groupsComplete : !currentGroupComplete} onClick={goToNextGroup} type="button">
+                            {currentGroupIndex === standings.length - 1 ? "Choose best thirds" : "Next group"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
                 {step === "thirds" ? (
