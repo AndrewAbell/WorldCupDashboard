@@ -337,7 +337,7 @@ export default function KnockoutBracket({
       ) : null}
       {modalOpen ? (
         <div className="modal-backdrop" role="presentation">
-          <div aria-modal="true" className="bracket-modal" role="dialog">
+          <div aria-modal="true" className={`bracket-modal ${step === "knockout" ? "knockout-mode" : ""}`} role="dialog">
             <div className="modal-head">
               <div>
                 <div className="card-title">Create Bracket</div>

@@ -853,6 +853,7 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 .bracket-progress {
@@ -1114,6 +1115,11 @@ body::after {
   gap: 6px;
 }
 
+.bracket-round.official.compact.round32 {
+  grid-auto-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
 .bracket-round.official.compact.round16 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -1147,6 +1153,7 @@ body::after {
 .bracket-round.compact .bracket-match {
   padding: 6px;
   gap: 4px;
+  min-height: 0;
 }
 
 .bracket-match-teams {
@@ -1163,6 +1170,30 @@ body::after {
   min-height: 30px;
   font-size: 10px;
   justify-content: flex-start;
+}
+
+.bracket-round.compact.round32 {
+  gap: 5px;
+}
+
+.bracket-round.compact.round32 .bracket-match {
+  padding: 5px;
+  gap: 3px;
+}
+
+.bracket-round.compact.round32 .bracket-match-label {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.bracket-round.compact.round32 .bracket-match-teams {
+  gap: 3px;
+}
+
+.bracket-round.compact.round32 .bracket-team {
+  min-height: 24px;
+  padding: 4px 7px;
+  font-size: 9px;
 }
 
 .champion-card {
@@ -1249,6 +1280,48 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.bracket-modal.knockout-mode {
+  width: min(1320px, calc(100vw - 24px));
+  height: min(92dvh, 820px);
+  min-height: 0;
+  max-height: calc(100dvh - 24px);
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+}
+
+.bracket-modal.knockout-mode .modal-head {
+  align-items: center;
+}
+
+.bracket-modal.knockout-mode .card-sub {
+  display: none;
+}
+
+.bracket-modal.knockout-mode .bracket-builder {
+  flex: 1;
+  gap: 8px;
+}
+
+.bracket-modal.knockout-mode .user-bracket {
+  flex: 1;
+  gap: 7px;
+}
+
+.bracket-modal.knockout-mode .bracket-steps button,
+.bracket-modal.knockout-mode .bracket-next,
+.bracket-modal.knockout-mode .bracket-progress button {
+  padding: 7px 10px;
+}
+
+.bracket-modal.knockout-mode .group-step-title {
+  font-size: 1.2rem;
+}
+
+.bracket-modal.knockout-mode .bracket-round {
+  flex: 1;
+  min-height: 0;
 }
 
 .round-view-head {
