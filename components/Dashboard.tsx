@@ -127,14 +127,6 @@ export default function Dashboard() {
   const featuredMatchLoading = scores.loading || (!scores.data.length && matches.loading);
   const featuredMatchError = featuredMatch ? null : scores.error ?? matches.error;
   const predictorMatch = useMemo(() => matches.data.find((match) => match.id === "usa-mex-nashville") ?? matches.data[0] ?? null, [matches.data]);
-  const bracketTeams = useMemo(
-    () =>
-      standings.data
-        .flatMap((group) => group.teams.filter((team) => team.qualifies).map((team) => team.team))
-        .slice(0, 4),
-    [standings.data]
-  );
-
   return (
     <main className="wrap">
       <Header liveCount={scores.data.length} />
@@ -152,7 +144,7 @@ export default function Dashboard() {
         <AiPredictor match={predictorMatch} />
       </div>
       <div className="grid2">
-        <KnockoutBracket teams={bracketTeams} loading={standings.loading} error={standings.error} onRetry={loadAll} />
+        <KnockoutBracket standings={standings.data} loading={standings.loading} error={standings.error} onRetry={loadAll} />
         <TournamentStatsCard stats={stats.data} loading={stats.loading} error={stats.error} onRetry={loadAll} />
       </div>
     </main>

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test --test-concurrency=1 --import tsx tests/rateLimit.test.ts tests/serverCache.test.ts tests/localStorage.test.ts tests/football.test.ts tests/predictRoute.test.ts",
+    "test": "node --test --test-concurrency=1 --import tsx tests/rateLimit.test.ts tests/serverCache.test.ts tests/localStorage.test.ts tests/football.test.ts tests/bracket.test.ts tests/predictRoute.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
