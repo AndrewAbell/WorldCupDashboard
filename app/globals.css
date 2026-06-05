@@ -787,15 +787,95 @@ body::after {
   gap: 8px;
 }
 
-.bracket-empty {
-  min-height: 88px;
+.bracket-spotlight {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(246, 166, 35, 0.28);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(246, 166, 35, 0.14), rgba(96, 165, 250, 0.08)),
+    rgba(255, 255, 255, 0.025);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.bracket-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: auto -12% -42px 18%;
+  height: 82px;
+  background: radial-gradient(circle, rgba(246, 166, 35, 0.18), transparent 68%);
+  pointer-events: none;
+}
+
+.bracket-mark {
+  position: relative;
+  z-index: 1;
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--gold-border);
+  border-radius: 50%;
   display: grid;
   place-items: center;
+  background: linear-gradient(135deg, rgba(246, 166, 35, 0.26), rgba(15, 23, 36, 0.6));
+  color: var(--gold);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 12px 30px rgba(246, 166, 35, 0.12);
+}
+
+.bracket-mark span {
+  transform: translateY(1px);
+}
+
+.bracket-spotlight-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bracket-kicker {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.bracket-spotlight-copy strong {
+  color: var(--text);
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  line-height: 1.1;
+}
+
+.bracket-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bracket-stat-row span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(15, 23, 36, 0.42);
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
 }
 
 .bracket-create,
 .bracket-form button,
 .bracket-progress button {
+  position: relative;
+  z-index: 1;
   border: 1px solid var(--gold-border);
   background: var(--gold-soft);
   color: var(--gold);
@@ -805,6 +885,13 @@ body::after {
   padding: 9px 12px;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.bracket-spotlight .bracket-create {
+  min-height: 42px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(246, 166, 35, 0.24), rgba(246, 166, 35, 0.1));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
 }
 
 .bracket-create:hover,
@@ -1229,7 +1316,7 @@ body::after {
 .leaderboard {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .leader-row {
@@ -1238,9 +1325,9 @@ body::after {
   justify-content: space-between;
   gap: 10px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.035);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 10px 12px;
   font-size: 12px;
 }
 
@@ -1729,6 +1816,15 @@ button.state-box {
 
   .group-pick-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .bracket-spotlight {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .bracket-spotlight .bracket-create {
+    grid-column: 1 / -1;
+    justify-self: stretch;
   }
 
   .group-pick-grid.official,

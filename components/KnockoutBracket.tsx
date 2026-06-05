@@ -315,7 +315,19 @@ export default function KnockoutBracket({
       {!loading && standings.length === 0 ? <EmptyState>No data for bracket builder</EmptyState> : null}
       {!loading && standings.length > 0 ? (
         <>
-          <div className="bracket-empty">
+          <div className="bracket-spotlight">
+            <div className="bracket-mark" aria-hidden="true">
+              <span>26</span>
+            </div>
+            <div className="bracket-spotlight-copy">
+              <div className="bracket-kicker">Bracket builder</div>
+              <strong>Pick your road to the final</strong>
+              <div className="bracket-stat-row">
+                <span>36 group picks</span>
+                <span>8 best thirds</span>
+                <span>5 knockout rounds</span>
+              </div>
+            </div>
             <button className="bracket-create" onClick={openModal} type="button">
               Create a bracket
             </button>
