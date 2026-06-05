@@ -1225,12 +1225,25 @@ body::after {
 
 .bracket-round.official.compact.quarterfinals,
 .bracket-round.official.compact.semifinals {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(280px, 420px));
+  justify-content: center;
+  align-content: center;
+  gap: 14px;
 }
 
 .bracket-round.official.compact.final {
   grid-template-columns: minmax(240px, 360px);
   justify-content: center;
+  align-content: center;
+}
+
+.bracket-round.compact.quarterfinals .bracket-match,
+.bracket-round.compact.semifinals .bracket-match {
+  min-height: 86px;
+}
+
+.bracket-round.compact.final .bracket-match {
+  min-height: 96px;
 }
 
 .bracket-round .bracket-section {
@@ -1852,6 +1865,15 @@ button.state-box {
 
   .bracket-round.official {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .bracket-round.official.compact.quarterfinals,
+  .bracket-round.official.compact.semifinals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bracket-round.official.compact.final {
+    grid-template-columns: minmax(0, 360px);
   }
 
   .bracket-round .bracket-section {
