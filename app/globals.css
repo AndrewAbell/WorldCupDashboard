@@ -308,18 +308,18 @@ body::after {
   border: 1px solid var(--gold-border);
   border-radius: var(--radius);
   padding: 1.25rem 1.5rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
 .lm-teams {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
-  flex: 1;
+  grid-column: 2;
   min-width: 260px;
 }
 
@@ -380,6 +380,8 @@ body::after {
   flex-direction: column;
   gap: 8px;
   align-items: flex-end;
+  grid-column: 3;
+  justify-self: end;
 }
 
 .lm-venue {
@@ -1695,7 +1697,12 @@ button.state-box {
     grid-template-columns: 1fr;
   }
 
+  .live-match {
+    grid-template-columns: 1fr;
+  }
+
   .lm-teams {
+    grid-column: 1 / -1;
     gap: 0.75rem;
     min-width: 0;
   }
@@ -1705,6 +1712,8 @@ button.state-box {
   }
 
   .lm-right {
+    grid-column: 1 / -1;
+    justify-self: stretch;
     width: 100%;
     align-items: flex-start;
   }
