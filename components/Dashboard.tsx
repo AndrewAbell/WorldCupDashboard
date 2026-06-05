@@ -144,7 +144,7 @@ export default function Dashboard() {
         <AiPredictor match={predictorMatch} />
       </div>
       <div className="grid2">
-        <KnockoutBracket standings={standings.data} loading={standings.loading} error={standings.error} onRetry={loadAll} />
+        <KnockoutBracket standings={standings.data} matches={matches.data} loading={standings.loading} error={standings.error} onRetry={loadAll} />
         <TournamentStatsCard stats={stats.data} loading={stats.loading} error={stats.error} onRetry={loadAll} />
       </div>
     </main>

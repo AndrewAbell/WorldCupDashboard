@@ -1,8 +1,10 @@
 import type { PredictionResult } from "@/types";
+import type { SavedBracket } from "@/lib/bracket";
 
 const FOLLOWED_TEAMS_KEY = "wc2026_followed_teams";
 const PREDICTION_CACHE_KEY = "wc2026_prediction_cache";
 const DISMISSED_KEY = "wc2026_dismissed";
+const USER_BRACKETS_KEY = "wc2026_user_brackets";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -54,4 +56,13 @@ export function savePredictionToCache(matchId: string, prediction: PredictionRes
   const cache = readJson<Record<string, PredictionResult>>(PREDICTION_CACHE_KEY, {});
   cache[matchId] = { ...prediction, cachedAt: Date.now() };
   writeJson(PREDICTION_CACHE_KEY, cache);
+}
+
+export function getUserBrackets(): SavedBracket[] {
+  return readJson<SavedBracket[]>(USER_BRACKETS_KEY, []);
+}
+
+export function saveUserBracket(bracket: SavedBracket): void {
+  const brackets = getUserBrackets().filter((item) => item.id !== bracket.id);
+  writeJson(USER_BRACKETS_KEY, [bracket, ...brackets].slice(0, 50));
 }
