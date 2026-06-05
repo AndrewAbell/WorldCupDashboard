@@ -35,6 +35,16 @@ function safeName(name: string): string {
   return name.trim().slice(0, 40);
 }
 
+function flagForTeam(team: Team): string {
+  if (team.id === "england") {
+    return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
+  }
+  if (team.id === "scotland") {
+    return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}";
+  }
+  return team.flag;
+}
+
 export default function KnockoutBracket({
   standings,
   matches,
@@ -59,6 +69,8 @@ export default function KnockoutBracket({
   const [savedBrackets, setSavedBrackets] = useState<SavedBracket[]>([]);
   const [saveMessage, setSaveMessage] = useState("");
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  const [championSplash, setChampionSplash] = useState<Team | null>(null);
 
   useEffect(() => {
     setSavedBrackets(getUserBrackets());
@@ -83,6 +95,15 @@ export default function KnockoutBracket({
         .slice(0, 10),
     [matches, savedBrackets, standings]
   );
+  const currentRound = bracketRounds[currentRoundIndex] ?? bracketRounds[0];
+
+  useEffect(() => {
+    if (!championSplash) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setChampionSplash(null), 3200);
+    return () => window.clearTimeout(timeout);
+  }, [championSplash]);
 
   function openModal() {
     setModalOpen(true);
@@ -136,9 +157,29 @@ export default function KnockoutBracket({
     setAnimatedPick(`third-${group}`);
   }
 
+  function trimKnockoutPicks(matchId: string, picks: KnockoutPicks): KnockoutPicks {
+    const entries = Object.entries(picks);
+    if (/^M7[3-9]$|^M8[0-8]$/.test(matchId)) {
+      return Object.fromEntries(entries.filter(([id]) => /^M7[3-9]$|^M8[0-8]$/.test(id)));
+    }
+    if (/^M8[9]$|^M9[0-6]$/.test(matchId)) {
+      return Object.fromEntries(entries.filter(([id]) => /^M7[3-9]$|^M8[0-8]$|^M8[9]$|^M9[0-6]$/.test(id)));
+    }
+    if (/^M9[7-9]$|^M100$/.test(matchId)) {
+      return Object.fromEntries(entries.filter(([id]) => /^M(7[3-9]|8[0-9]|9[0-9]|100)$/.test(id) && !["M101", "M102", "M104"].includes(id)));
+    }
+    if (matchId === "M101" || matchId === "M102") {
+      return Object.fromEntries(entries.filter(([id]) => id !== "M104"));
+    }
+    return picks;
+  }
+
   function selectKnockoutWinner(match: BracketMatch, team: Team) {
-    setKnockoutPicks((current) => ({ ...current, [match.id]: team.id }));
+    setKnockoutPicks((current) => ({ ...trimKnockoutPicks(match.id, current), [match.id]: team.id }));
     setAnimatedPick(`${match.id}-${team.id}`);
+    if (match.id === "M104") {
+      setChampionSplash(team);
+    }
   }
 
   function saveBracket() {
@@ -155,7 +196,8 @@ export default function KnockoutBracket({
     };
     saveUserBracket(bracket);
     setSavedBrackets(getUserBrackets());
-    setSaveMessage("Bracket saved to leaderboard");
+    setSaveMessage("");
+    setModalOpen(false);
   }
 
   function resetBuilder() {
@@ -168,6 +210,8 @@ export default function KnockoutBracket({
     setAnimatedPick("");
     setSaveMessage("");
     setCurrentGroupIndex(0);
+    setCurrentRoundIndex(0);
+    setChampionSplash(null);
   }
 
   function goToNextGroup() {
@@ -190,8 +234,8 @@ export default function KnockoutBracket({
       <button className={`bracket-team ${selected ? "selected" : ""} ${animated ? "picked" : ""}`} disabled={!team} onClick={onClick} type="button">
         {team ? (
           <>
-            <span>{team.flag}</span>
-            <span>{team.shortName}</span>
+            <span className="team-flag" aria-hidden="true">{flagForTeam(team)}</span>
+            <span className="team-name">{team.name}</span>
             {animated ? <span className="winner-burst" /> : null}
           </>
         ) : (
@@ -263,7 +307,7 @@ export default function KnockoutBracket({
                 <div className="bracket-steps">
                   <button className={step === "groups" ? "selected" : ""} onClick={() => setStep("groups")} type="button">Groups</button>
                   <button className={step === "thirds" ? "selected" : ""} disabled={!groupsComplete} onClick={() => setStep("thirds")} type="button">Best thirds</button>
-                  <button className={step === "knockout" ? "selected" : ""} disabled={thirdQualifiers.length !== 8} onClick={() => setStep("knockout")} type="button">Knockout</button>
+                  <button className={step === "knockout" ? "selected" : ""} disabled={thirdQualifiers.length !== 8} onClick={() => { setCurrentRoundIndex(0); setStep("knockout"); }} type="button">Knockout</button>
                 </div>
                 {step === "groups" ? (
                   <>
@@ -322,15 +366,28 @@ export default function KnockoutBracket({
                         return teamButton(team, `Group ${group} third`, selected, animatedPick === `third-${group}`, () => toggleThirdQualifier(group));
                       })}
                     </div>
-                    <button className="bracket-next" disabled={thirdQualifiers.length !== 8} onClick={() => setStep("knockout")} type="button">Build official knockout bracket</button>
+                    <button className="bracket-next" disabled={thirdQualifiers.length !== 8} onClick={() => { setCurrentRoundIndex(0); setStep("knockout"); }} type="button">Build official knockout bracket</button>
                   </>
                 ) : null}
                 {step === "knockout" ? (
                   <div className="user-bracket">
-                    {bracketRounds.map((round) => (
-                      <div className="bracket-round official" key={round.id}>
-                        <div className="bracket-section">{round.title}</div>
-                        {round.matches.map((match) => (
+                    <div className="round-view-head">
+                      <div>
+                        <div className="group-step-eyebrow">Knockout</div>
+                        <div className="group-step-title">{currentRound?.title}</div>
+                      </div>
+                      <div className="round-count">{currentRoundIndex + 1}/{bracketRounds.length}</div>
+                    </div>
+                    <div className="round-tabs">
+                      {bracketRounds.map((round, index) => (
+                        <button className={index === currentRoundIndex ? "selected" : ""} key={round.id} onClick={() => setCurrentRoundIndex(index)} type="button">
+                          {round.title.replace("Round of ", "R")}
+                        </button>
+                      ))}
+                    </div>
+                    {currentRound ? (
+                      <div className={`bracket-round official compact ${currentRound.id}`} key={currentRound.id}>
+                        {currentRound.matches.map((match) => (
                           <div className="bracket-match" key={match.id}>
                             <div className="bracket-match-label">{match.label}</div>
                             <div className="bracket-match-teams">
@@ -340,16 +397,32 @@ export default function KnockoutBracket({
                           </div>
                         ))}
                       </div>
-                    ))}
+                    ) : null}
+                    <div className="group-step-nav">
+                      <button className="bracket-next secondary" disabled={currentRoundIndex === 0} onClick={() => setCurrentRoundIndex((index) => Math.max(0, index - 1))} type="button">Previous round</button>
+                      <button className="bracket-next" disabled={currentRoundIndex === bracketRounds.length - 1} onClick={() => setCurrentRoundIndex((index) => Math.min(bracketRounds.length - 1, index + 1))} type="button">Next round</button>
+                    </div>
                     {champion ? (
                       <div className={`champion-card ${animatedPick === `M104-${champion.id}` ? "picked" : ""}`}>
                         <span>Champion</span>
-                        <strong>{champion.flag} {champion.shortName}</strong>
+                        <strong>{flagForTeam(champion)} {champion.name}</strong>
                       </div>
                     ) : null}
                     {saveMessage ? <div className="state-box muted">{saveMessage}</div> : null}
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+            {championSplash ? (
+              <div className="champion-splash" aria-live="polite">
+                <div className="confetti-field">
+                  {Array.from({ length: 28 }, (_, index) => <span key={index} />)}
+                </div>
+                <div className="champion-splash-card">
+                  <div className="champion-flag">{flagForTeam(championSplash)}</div>
+                  <div className="champion-name">{championSplash.name}</div>
+                  <div className="champion-title">2026 World Cup Champion</div>
+                </div>
               </div>
             ) : null}
           </div>

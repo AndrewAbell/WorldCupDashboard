@@ -1014,7 +1014,7 @@ body::after {
   background: rgba(255, 255, 255, 0.03);
   color: var(--text2);
   border-radius: var(--radius-sm);
-  padding: 7px 8px;
+  padding: 6px 8px;
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -1029,7 +1029,12 @@ body::after {
   min-height: 44px;
 }
 
-.bracket-team span:last-child {
+.team-flag {
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+
+.bracket-team .team-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1091,6 +1096,25 @@ body::after {
   grid-template-columns: 94px repeat(4, minmax(0, 1fr));
 }
 
+.bracket-round.official.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.bracket-round.official.compact.round16 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bracket-round.official.compact.quarterfinals,
+.bracket-round.official.compact.semifinals {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bracket-round.official.compact.final {
+  grid-template-columns: minmax(240px, 360px);
+  justify-content: center;
+}
+
 .bracket-round .bracket-section {
   grid-row: 1 / span 6;
   border-bottom: 0;
@@ -1107,10 +1131,25 @@ body::after {
   gap: 6px;
 }
 
+.bracket-round.compact .bracket-match {
+  padding: 6px;
+  gap: 4px;
+}
+
 .bracket-match-teams {
   display: grid;
   grid-template-columns: 1fr;
   gap: 5px;
+}
+
+.bracket-round.compact .bracket-match-teams {
+  gap: 4px;
+}
+
+.bracket-round.compact .bracket-team {
+  min-height: 30px;
+  font-size: 10px;
+  justify-content: flex-start;
 }
 
 .champion-card {
@@ -1181,9 +1220,11 @@ body::after {
 }
 
 .bracket-modal {
+  position: relative;
   width: min(1040px, 100%);
+  min-height: min(86vh, 860px);
   max-height: min(86vh, 860px);
-  overflow: auto;
+  overflow: hidden;
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1192,6 +1233,143 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.round-view-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.round-count {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.round-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.round-tabs button {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text2);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.round-tabs button.selected {
+  color: var(--gold);
+  background: var(--gold-soft);
+  border-color: var(--gold-border);
+}
+
+.champion-splash {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.champion-splash-card {
+  position: relative;
+  z-index: 2;
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius);
+  background: rgba(15, 23, 36, 0.9);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.5), 0 0 60px rgba(246, 166, 35, 0.18);
+  padding: 1.25rem 1.75rem;
+  text-align: center;
+  animation: championPop 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.champion-flag {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.champion-name {
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+  margin-top: 0.5rem;
+}
+
+.champion-title {
+  font-size: clamp(1rem, 2.6vw, 1.8rem);
+  color: var(--text);
+  font-weight: 800;
+  margin-top: 0.45rem;
+}
+
+@keyframes championPop {
+  from { opacity: 0; transform: scale(0.82) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.confetti-field {
+  position: absolute;
+  inset: 0;
+}
+
+.confetti-field span {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--gold);
+  animation: confettiFall 3s ease-in forwards;
+}
+
+.confetti-field span:nth-child(3n) { background: var(--green); }
+.confetti-field span:nth-child(4n) { background: var(--blue); }
+.confetti-field span:nth-child(5n) { background: var(--purple); }
+.confetti-field span:nth-child(1) { left: 4%; animation-delay: 0s; }
+.confetti-field span:nth-child(2) { left: 9%; animation-delay: 0.12s; }
+.confetti-field span:nth-child(3) { left: 14%; animation-delay: 0.25s; }
+.confetti-field span:nth-child(4) { left: 18%; animation-delay: 0.08s; }
+.confetti-field span:nth-child(5) { left: 23%; animation-delay: 0.32s; }
+.confetti-field span:nth-child(6) { left: 28%; animation-delay: 0.18s; }
+.confetti-field span:nth-child(7) { left: 33%; animation-delay: 0.04s; }
+.confetti-field span:nth-child(8) { left: 38%; animation-delay: 0.22s; }
+.confetti-field span:nth-child(9) { left: 43%; animation-delay: 0.36s; }
+.confetti-field span:nth-child(10) { left: 48%; animation-delay: 0.11s; }
+.confetti-field span:nth-child(11) { left: 53%; animation-delay: 0.3s; }
+.confetti-field span:nth-child(12) { left: 58%; animation-delay: 0.16s; }
+.confetti-field span:nth-child(13) { left: 63%; animation-delay: 0.02s; }
+.confetti-field span:nth-child(14) { left: 68%; animation-delay: 0.24s; }
+.confetti-field span:nth-child(15) { left: 73%; animation-delay: 0.38s; }
+.confetti-field span:nth-child(16) { left: 78%; animation-delay: 0.14s; }
+.confetti-field span:nth-child(17) { left: 83%; animation-delay: 0.28s; }
+.confetti-field span:nth-child(18) { left: 88%; animation-delay: 0.06s; }
+.confetti-field span:nth-child(19) { left: 93%; animation-delay: 0.2s; }
+.confetti-field span:nth-child(20) { left: 97%; animation-delay: 0.34s; }
+.confetti-field span:nth-child(21) { left: 6%; animation-delay: 0.42s; }
+.confetti-field span:nth-child(22) { left: 16%; animation-delay: 0.5s; }
+.confetti-field span:nth-child(23) { left: 31%; animation-delay: 0.44s; }
+.confetti-field span:nth-child(24) { left: 46%; animation-delay: 0.58s; }
+.confetti-field span:nth-child(25) { left: 61%; animation-delay: 0.46s; }
+.confetti-field span:nth-child(26) { left: 76%; animation-delay: 0.52s; }
+.confetti-field span:nth-child(27) { left: 86%; animation-delay: 0.48s; }
+.confetti-field span:nth-child(28) { left: 96%; animation-delay: 0.56s; }
+
+@keyframes confettiFall {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(92vh) rotate(520deg); }
 }
 
 .modal-head {
