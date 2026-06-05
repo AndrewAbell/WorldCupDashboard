@@ -59,10 +59,32 @@ export function savePredictionToCache(matchId: string, prediction: PredictionRes
 }
 
 export function getUserBrackets(): SavedBracket[] {
-  return readJson<SavedBracket[]>(USER_BRACKETS_KEY, []);
+  return dedupeUserBrackets(readJson<SavedBracket[]>(USER_BRACKETS_KEY, []));
 }
 
 export function saveUserBracket(bracket: SavedBracket): void {
-  const brackets = getUserBrackets().filter((item) => item.id !== bracket.id);
+  const ownerKey = bracketOwnerKey(bracket);
+  const brackets = getUserBrackets().filter((item) => item.id !== bracket.id && bracketOwnerKey(item) !== ownerKey);
   writeJson(USER_BRACKETS_KEY, [bracket, ...brackets].slice(0, 50));
+}
+
+function bracketOwnerKey(bracket: Pick<SavedBracket, "name">): string {
+  return bracket.name.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function dedupeUserBrackets(brackets: SavedBracket[]): SavedBracket[] {
+  const byOwner = new Map<string, SavedBracket>();
+
+  for (const bracket of brackets) {
+    const key = bracketOwnerKey(bracket);
+    if (!key) {
+      continue;
+    }
+    const current = byOwner.get(key);
+    if (!current || bracket.createdAt > current.createdAt) {
+      byOwner.set(key, bracket);
+    }
+  }
+
+  return [...byOwner.values()].sort((a, b) => b.createdAt - a.createdAt).slice(0, 50);
 }
