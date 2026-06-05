@@ -35,14 +35,73 @@ function safeName(name: string): string {
   return name.trim().slice(0, 40);
 }
 
-function flagForTeam(team: Team): string {
-  if (team.id === "england") {
-    return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
+const FLAG_CODES: Record<string, string> = {
+  algeria: "dz",
+  argentina: "ar",
+  australia: "au",
+  austria: "at",
+  belgium: "be",
+  "bosnia-herzegovina": "ba",
+  brazil: "br",
+  "cabo-verde": "cv",
+  canada: "ca",
+  colombia: "co",
+  "cote-divoire": "ci",
+  croatia: "hr",
+  curacao: "cw",
+  czechia: "cz",
+  "dr-congo": "cd",
+  ecuador: "ec",
+  egypt: "eg",
+  england: "gb-eng",
+  france: "fr",
+  germany: "de",
+  ghana: "gh",
+  haiti: "ht",
+  iran: "ir",
+  iraq: "iq",
+  japan: "jp",
+  jordan: "jo",
+  "korea-republic": "kr",
+  mexico: "mx",
+  morocco: "ma",
+  netherlands: "nl",
+  "new-zealand": "nz",
+  norway: "no",
+  panama: "pa",
+  paraguay: "py",
+  portugal: "pt",
+  qatar: "qa",
+  "saudi-arabia": "sa",
+  scotland: "gb-sct",
+  senegal: "sn",
+  "south-africa": "za",
+  spain: "es",
+  sweden: "se",
+  switzerland: "ch",
+  tunisia: "tn",
+  turkiye: "tr",
+  uruguay: "uy",
+  usa: "us",
+  uzbekistan: "uz"
+};
+
+function FlagIcon({ team, size = 20 }: { team: Team; size?: number }) {
+  const code = FLAG_CODES[team.id];
+  if (!code) {
+    return <span className="team-flag-fallback">{team.flag}</span>;
   }
-  if (team.id === "scotland") {
-    return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}";
-  }
-  return team.flag;
+
+  return (
+    <img
+      alt=""
+      aria-hidden="true"
+      className="team-flag-img"
+      height={Math.round(size * 0.7)}
+      src={`https://flagcdn.com/${code}.svg`}
+      width={size}
+    />
+  );
 }
 
 export default function KnockoutBracket({
@@ -234,7 +293,7 @@ export default function KnockoutBracket({
       <button className={`bracket-team ${selected ? "selected" : ""} ${animated ? "picked" : ""}`} disabled={!team} onClick={onClick} type="button">
         {team ? (
           <>
-            <span className="team-flag" aria-hidden="true">{flagForTeam(team)}</span>
+            <FlagIcon team={team} />
             <span className="team-name">{team.name}</span>
             {animated ? <span className="winner-burst" /> : null}
           </>
@@ -405,7 +464,7 @@ export default function KnockoutBracket({
                     {champion ? (
                       <div className={`champion-card ${animatedPick === `M104-${champion.id}` ? "picked" : ""}`}>
                         <span>Champion</span>
-                        <strong>{flagForTeam(champion)} {champion.name}</strong>
+                        <strong><FlagIcon team={champion} size={22} /> {champion.name}</strong>
                       </div>
                     ) : null}
                     {saveMessage ? <div className="state-box muted">{saveMessage}</div> : null}
@@ -419,7 +478,7 @@ export default function KnockoutBracket({
                   {Array.from({ length: 28 }, (_, index) => <span key={index} />)}
                 </div>
                 <div className="champion-splash-card">
-                  <div className="champion-flag">{flagForTeam(championSplash)}</div>
+                  <div className="champion-flag"><FlagIcon team={championSplash} size={64} /></div>
                   <div className="champion-name">{championSplash.name}</div>
                   <div className="champion-title">2026 World Cup Champion</div>
                 </div>
