@@ -356,11 +356,14 @@ body::after {
 
 .lm-kickoff {
   max-width: 150px;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--gold);
-  line-height: 1.15;
+  line-height: 1.05;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .lm-min {
