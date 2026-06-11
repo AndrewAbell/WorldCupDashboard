@@ -49,6 +49,24 @@ export default function Dashboard() {
   const [standings, setStandings] = useState(initialState.standings);
   const [stats, setStats] = useState(initialState.stats);
 
+  const loadScores = useCallback(async () => {
+    try {
+      const payload = await fetchPayload<Match[]>("/api/scores");
+      setScores({
+        data: payload.data,
+        source: payload.source,
+        error: payload.error ?? null,
+        loading: false
+      });
+    } catch (error) {
+      setScores((state) => ({
+        ...state,
+        loading: false,
+        error: error instanceof Error ? error.message : "Couldn't load scores"
+      }));
+    }
+  }, []);
+
   const loadAll = useCallback(async () => {
     setMatches((state) => ({ ...state, loading: true, error: null }));
     setScores((state) => ({ ...state, loading: true, error: null }));
@@ -114,6 +132,13 @@ export default function Dashboard() {
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void loadScores();
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, [loadScores]);
 
   const nextUpcomingMatch = useMemo(
     () =>

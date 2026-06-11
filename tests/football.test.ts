@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { getMatches, getScores, getStandings, getStats } from "@/lib/football";
+import { getMatches, getScores, getStandings, getStats, resetLiveScoreMemoryForTests } from "@/lib/football";
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
+const originalDateNow = Date.now;
 
 beforeEach(() => {
   process.env = { ...originalEnv };
@@ -11,6 +12,8 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  Date.now = originalDateNow;
+  resetLiveScoreMemoryForTests();
   process.env = { ...originalEnv };
 });
 
@@ -185,6 +188,92 @@ test("uses API-FOOTBALL live fixtures when football-data has no live scores", as
   assert.equal(result.data[0].minute, 67);
   assert.equal(result.data[0].score?.home, 2);
   assert.ok(requestedUrls.some((url) => url.includes("/fixtures?league=1&season=2026&live=all")));
+});
+
+test("infers live match from official kickoff window when providers lag", async () => {
+  process.env.FOOTBALL_DATA_KEY = "key";
+  process.env.API_FOOTBALL_KEY = "api-football";
+  Date.now = () => new Date("2026-06-11T19:34:00Z").getTime();
+  globalThis.fetch = async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("api.football-data.org")) {
+      return jsonResponse({
+        matches: [
+          {
+            id: 537327,
+            utcDate: "2026-06-11T19:00:00Z",
+            status: "SCHEDULED",
+            venue: "Estadio Azteca",
+            stage: "GROUP_STAGE",
+            group: "GROUP_A",
+            homeTeam: { id: 1, name: "Mexico", shortName: "Mexico", tla: "MEX" },
+            awayTeam: { id: 2, name: "South Africa", shortName: "South Africa", tla: "RSA" },
+            score: { fullTime: { home: null, away: null } }
+          }
+        ]
+      });
+    }
+    return jsonResponse({ response: [] });
+  };
+
+  const result = await getScores();
+
+  assert.equal(result.source, "live");
+  assert.equal(result.error, undefined);
+  assert.equal(result.data[0].status, "LIVE");
+  assert.equal(result.data[0].minute, 34);
+  assert.equal(result.data[0].homeTeam.name, "Mexico");
+  assert.equal(result.data[0].awayTeam.name, "South Africa");
+  assert.equal(result.data[0].score, undefined);
+});
+
+test("reuses last provider score when live providers temporarily drop the match", async () => {
+  process.env.FOOTBALL_DATA_KEY = "key";
+  process.env.API_FOOTBALL_KEY = "api-football";
+  Date.now = () => new Date("2026-06-11T19:20:00Z").getTime();
+  globalThis.fetch = async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("api.football-data.org")) {
+      return jsonResponse({ matches: [] });
+    }
+    return jsonResponse({
+      response: [
+        {
+          fixture: {
+            id: 537327,
+            date: "2026-06-11T19:00:00Z",
+            status: { short: "1H", elapsed: 20 },
+            venue: { name: "Estadio Azteca", city: "Mexico City" }
+          },
+          league: { round: "Group Stage" },
+          teams: {
+            home: { id: 1, name: "Mexico" },
+            away: { id: 2, name: "South Africa" }
+          },
+          goals: { home: 1, away: 0 }
+        }
+      ]
+    });
+  };
+
+  await getScores();
+
+  Date.now = () => new Date("2026-06-11T19:36:00Z").getTime();
+  globalThis.fetch = async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("api.football-data.org")) {
+      return jsonResponse({ matches: [] });
+    }
+    return jsonResponse({ response: [] });
+  };
+
+  const result = await getScores();
+
+  assert.equal(result.source, "live");
+  assert.equal(result.data[0].status, "LIVE");
+  assert.equal(result.data[0].minute, 36);
+  assert.equal(result.data[0].score?.home, 1);
+  assert.equal(result.data[0].score?.away, 0);
 });
 
 test("returns null stats when match API is unavailable", async () => {

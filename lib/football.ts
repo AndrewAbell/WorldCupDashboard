@@ -3,6 +3,13 @@ import type { ApiPayload, GroupStanding, Match, Team, TeamStanding, TournamentSt
 
 const FOOTBALL_BASE = "https://api.football-data.org/v4";
 const API_FOOTBALL_BASE = "https://v3.football.api-sports.io";
+const LIVE_WINDOW_MS = 150 * 60 * 1000;
+
+let lastLiveMatches: Match[] = [];
+
+export function resetLiveScoreMemoryForTests(): void {
+  lastLiveMatches = [];
+}
 
 type FootballDataTeam = {
   id?: number;
@@ -208,6 +215,10 @@ function findOfficialFixture(match: Pick<Match, "date" | "group" | "homeTeam" | 
   });
 }
 
+function matchIdentity(match: Pick<Match, "date" | "homeTeam" | "awayTeam">): string {
+  return `${match.homeTeam.id}-${match.awayTeam.id}-${new Date(match.date).toISOString().slice(0, 10)}`;
+}
+
 function enrichMatchWithOfficial(match: Match): Match {
   const official = findOfficialFixture(match);
   if (!official) {
@@ -223,6 +234,32 @@ function enrichMatchWithOfficial(match: Match): Match {
     homeTeam: official.homeTeam,
     awayTeam: official.awayTeam
   };
+}
+
+function updateLastLiveMatches(matches: Match[]): Match[] {
+  lastLiveMatches = matches;
+  return matches;
+}
+
+function activeOfficialMatches(now = Date.now()): Match[] {
+  return officialGroupStageFixtures
+    .filter((match) => {
+      const kickoff = new Date(match.date).getTime();
+      return kickoff <= now && now - kickoff <= LIVE_WINDOW_MS;
+    })
+    .map((match) => {
+      const kickoff = new Date(match.date).getTime();
+      const estimatedMinute = Math.max(1, Math.min(120, Math.floor((now - kickoff) / 60_000)));
+      const cached = lastLiveMatches.find((item) => matchIdentity(item) === matchIdentity(match));
+
+      return {
+        ...match,
+        status: "LIVE",
+        minute: Math.max(estimatedMinute, cached?.minute ?? 0),
+        score: cached?.score,
+        id: cached?.id ?? match.id
+      };
+    });
 }
 
 function mergeStandingsWithOfficial(liveStandings: GroupStanding[]): GroupStanding[] {
@@ -390,7 +427,7 @@ export async function getScores(): Promise<ApiPayload<Match[]>> {
       });
 
     if (live.length) {
-      return { data: live, source: "live" };
+      return { data: updateLastLiveMatches(live), source: "live" };
     }
   } catch (error) {
     footballDataError = error instanceof Error ? error.message : "Unknown error";
@@ -417,12 +454,28 @@ export async function getScores(): Promise<ApiPayload<Match[]>> {
       awayForm: []
     }));
 
+    if (apiLive.length) {
+      return {
+        data: updateLastLiveMatches(apiLive),
+        source: "live"
+      };
+    }
+
+    const inferredLive = activeOfficialMatches();
     return {
-      data: apiLive,
-      source: apiLive.length ? "live" : "none",
-      error: apiLive.length ? undefined : footballDataError || "No live matches returned"
+      data: inferredLive,
+      source: inferredLive.length ? "live" : "none",
+      error: inferredLive.length ? undefined : footballDataError || "No live matches returned"
     };
   } catch (error) {
+    const inferredLive = activeOfficialMatches();
+    if (inferredLive.length) {
+      return {
+        data: inferredLive,
+        source: "live"
+      };
+    }
+
     return {
       data: [],
       source: "none",

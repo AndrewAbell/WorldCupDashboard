@@ -32,6 +32,7 @@ export default function LiveMatch({
   }
 
   const isLive = mode === "live";
+  const liveScore = match.score ? `${match.score.home} - ${match.score.away}` : "LIVE";
   const [kickoffDate, kickoffTime] = formatMatchDate(match.date).split("\n");
 
   return (
@@ -44,7 +45,7 @@ export default function LiveMatch({
         <div className="lm-score-wrap">
           <div className={isLive ? "lm-score" : "lm-kickoff"}>
             {isLive ? (
-              `${match.score?.home ?? 0} - ${match.score?.away ?? 0}`
+              liveScore
             ) : (
               <>
                 <span>{kickoffDate}</span>
